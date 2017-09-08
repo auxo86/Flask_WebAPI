@@ -1,0 +1,83 @@
+path {
+    stroke: #f15400;
+    stroke-width: 2px;
+}
+
+/*放大後變色*/
+/*.feature.active {d
+    fill: #0d92d5;
+}*/
+
+.sliderBox{
+    position: absolute;
+    top: 150pt;
+    left: 820pt;
+    height: 200pt;
+    width: 500pt;
+    /*background-color: #f00;*/
+}
+
+.sliderSVG{
+    position: absolute;
+    top: 150pt;
+    left: 820pt;
+    height: 200pt;
+    width: 500pt;
+}
+
+
+.headlineBox{
+    position: absolute;
+    top: 150pt;
+    left: 50pt;
+    height: 100pt;
+    width: 150pt;
+}
+
+.headline{
+    font-family: 微軟正黑體;
+    font-weight: bold;
+    font-size: 29px;
+    color: #009988;
+}
+
+.subHeadline{
+    position: absolute;
+    top: 160px;
+    font-style: italic;
+    font-family: 微軟正黑體;
+    font-size: 10px;
+    color: rgba(124, 75, 21, 0.96)
+}
+
+.message-box{
+    position:absolute;
+    top: 420px;
+    left: 70px;
+    height: 100pt;
+    width: 200pt;
+}
+
+text.detail-text{
+    font-size: 20px;
+    z-index:99;
+    float:left;
+    color: #0569c2;
+    font-family: 標楷體;
+}
+
+.map-layer {
+    fill: #fff;
+    stroke: #5d5d5d;
+}
+
+.svgPic{
+    position: absolute;
+    top: 5pt;
+    left: 250pt;
+}
+
+.axis { font: 10px sans-serif; -webkit-user-select: none; -moz-user-select: none; user-select: none; }
+.axis   .domain { fill: none; stroke: #000; stroke-opacity: .3; stroke-width: 10px; stroke-linecap: round; }
+.axis   .halo   { fill: none; stroke: #ddd; stroke-width: 8px;  stroke-linecap: round; }
+.slider .handle { fill: #fff; stroke: #000; stroke-opacity: .5; stroke-width: 1.25px; pointer-events: none; }
