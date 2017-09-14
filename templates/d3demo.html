@@ -7,25 +7,35 @@
     <script src="{{ url_for("static", filename="js/d3.js") }}"></script>
     <script src="{{ url_for("static", filename="js/topojson.js") }}"></script>
     <script src="{{ url_for("static", filename="js/d3-queue.js") }}"></script>
-    <!--<script src="../static/js/Slider.js"></script>-->
+    <script src="{{ url_for("static", filename="js/d3jsV4Slider.js") }}"></script>
 </head>
 <body>
 <div class="headlineBox">
     <div class="headline" id="text_HeadLine"></div>
     <div class="subHeadline" id="text_SubHeadLine">-以台北地區為例</div>
 </div>
-<div class="sliderBox" id="divSliderBox"></div>
+<div id="div-SliderBox" class="sliderBox">
+    <div id="div-sStartYr">起始歲數</div><br>
+    <div id="div-sDiffYr">年齡區間</div><br>
+    <div id="div-sDiagYr">統計區間</div><br>
+</div>
+
 <script>
 
     var width = 800,
         Height = 950,
         centered = d3.select(null),
-        intStartYr = 65,
-        intDiffYr = 35,
+        intStartYr = 80,
+        intDiffYr = 40,
         intDiagYr = 5,
         intEndYr = intStartYr + intDiffYr,
         strTitle = "三軍總醫院 " + String(intDiagYr) + " 年來 " + String(intStartYr)  + " 歲到 " + String(intEndYr) + " 歲求診族群分佈圖",
         lastFocusNode = d3.select(null);
+
+    var arrayDensity;
+    var max;
+    var features;
+    var gv_villages, gv_hospitals, gv_TaipeiTopo;
 
     var title = d3.select("#text_HeadLine").append("text");
     title.text(strTitle)
@@ -79,20 +89,28 @@
     );
 
     // load data
-    dataURL = 'http://10.160.16.16:9999/GISSYS/api/geopopdata/' + String(intStartYr) + '/' + String(intDiffYr) + '/' + String(intDiagYr);
+    var dataURL = 'http://10.160.16.16:9999/GISSYS/api/geopopdata/' + String(intStartYr) + '/' + String(intDiffYr) + '/' + String(intDiagYr);
 
     var q = d3.queue();
-    //q.defer(d3.json, "TPE_5Y_POP_DISTRBUTE_OVER65_.json");
+
     q.defer(d3.json, dataURL);
     q.defer(d3.csv, "{{ url_for("static", filename="csv/hospitals.csv")}}");
     q.defer(d3.json, "{{ url_for("static", filename="json/taipei_topo.json")}}");
-    q.await(loaded);
+    q.await(fxDataDone);
 
-    function loaded(error, villages, hospitals, TaipeiTopo){
+
+    // 為了把非同步資料變成global value，所以只好用下面這個片段
+    function fxDataDone(error, villages, hospitals, TaipeiTopo){
         if(error) { console.log(error); }
+        gv_villages = villages;
+        gv_hospitals = hospitals;
+        gv_TaipeiTopo = TaipeiTopo;
+        loaded();
+    }
 
-        arrayDensity = Object.keys(villages.tasks).map(function(k) { return Number(villages.tasks[k][0]/villages.tasks[k][1]);});
-        var max = d3.max(d3.values(arrayDensity));
+    function loaded(){
+        arrayDensity = Object.keys(gv_villages.tasks).map(function(k) { return Number(gv_villages.tasks[k][0]/gv_villages.tasks[k][1]);});
+        max = d3.max(d3.values(arrayDensity));
 
         // 把密度投射到色彩空間
         color.domain([0, max*0.2])
@@ -100,20 +118,10 @@
             .clamp(true);
 
         // 這裡要注意的是 topodata.objects["taipei"] 中的 "taipei" 為原本 shp 的檔名
-        features = topojson.feature(TaipeiTopo, TaipeiTopo.objects["taipei"]).features;
+        features = topojson.feature(gv_TaipeiTopo, gv_TaipeiTopo.objects["taipei"]).features;
 
         // 資料貼合
-        for(var i=features.length - 1; i >= 0; i-- ) {
-            if (villages.tasks[features[i].properties.LIE_CODE] === undefined){
-                features[i].properties.density = undefined;
-                features[i].properties.diagPop = '無資料';
-                features[i].properties.allPop = '無資料';
-                continue;
-            }
-            features[i].properties.density = villages.tasks[features[i].properties.LIE_CODE][0]/villages.tasks[features[i].properties.LIE_CODE][1];
-            features[i].properties.diagPop = villages.tasks[features[i].properties.LIE_CODE][0];
-            features[i].properties.allPop = villages.tasks[features[i].properties.LIE_CODE][1];
-        }
+        fxDataBinding();
 
         // 畫地圖
         mapLayer.selectAll("path").data(features)
@@ -129,7 +137,7 @@
 
         // 畫醫院
         mapLayer.selectAll("circle")
-            .data(hospitals)
+            .data(gv_hospitals)
             .enter()
             .append("circle")
             .attr("cx", function(d) {
@@ -140,6 +148,20 @@
             })
             .attr("r", 5)
             .style("fill", "red");
+    }
+
+    function fxDataBinding(){
+        for(var i=features.length - 1; i >= 0; i-- ) {
+            if (gv_villages.tasks[features[i].properties.LIE_CODE] === undefined){
+                features[i].properties.density = undefined;
+                features[i].properties.diagPop = '無資料';
+                features[i].properties.allPop = '無資料';
+                continue;
+            }
+            features[i].properties.density = gv_villages.tasks[features[i].properties.LIE_CODE][0]/gv_villages.tasks[features[i].properties.LIE_CODE][1];
+            features[i].properties.diagPop = gv_villages.tasks[features[i].properties.LIE_CODE][0];
+            features[i].properties.allPop = gv_villages.tasks[features[i].properties.LIE_CODE][1];
+        }
     }
 
     function fillFn(d){
@@ -249,17 +271,74 @@
     function stopped() {
         if (d3.event.defaultPrevented) d3.event.stopPropagation();
     }
-    //----------------------------------------------------------------------------------
-    //    sStartYr = slider(); sDiffYr = slider(); sDiagYr = slider();
-    //    sStartYr.value(1.);
-    //    sStartYr.callback();
-    //    //sDiffYr.value(150);
-    //    //sDiagYr.value(100);
-    //    d3.select("#divSliderBox").append("svg").call(sStartYr);
-    //    //d3.select("#divSliderBox").append("svg");//.call(sDiffYr);
-    //    //d3.select("#divSliderBox").append("svg");//.call(sDiagYr);
 
+    //-----------------------------slider------------------------------
+    function Constr(d0, d1, d2, txt1, txt2, txt3)
+    {
+        intStartYr = Math.round(d0.value());
+        intDiffYr = Math.round(d1.value());
+        intDiagYr = Math.round(d2.value());
+        // 詭異~明明我全域變數都已經定義過了，為什麼這裡沒有加下面這一行intEndYr就是不會變？
+        // 意外發現python也一樣@@
+        intEndYr = intStartYr + intDiffYr;
 
+        txt1.html(intStartYr + ' 歲');
+        txt2.html(intDiffYr + ' 歲');
+        txt3.html(intDiagYr + ' 年內');
+    }
+
+    var sStartYr = slider(0,120), sDiffYr = slider(0,120), sDiagYr = slider(0,100);
+
+    d3.select("#div-sStartYr").append("svg").call(sStartYr);
+    d3.select("#div-sDiffYr").append("svg").call(sDiffYr);
+    d3.select("#div-sDiagYr").append("svg").call(sDiagYr);
+
+    sStartYr.value(intStartYr);
+    sDiffYr.value(intDiffYr);
+    sDiagYr.value(intDiagYr);
+
+    var x1Text = d3.select('#div-sStartYr').append('text'),
+        x2Text = d3.select('#div-sDiffYr').append('text'),
+        x3Text = d3.select('#div-sDiagYr').append('text');
+
+    //    sStartYr.callback(function(){Constr(sStartYr,sDiffYr,sDiagYr, x1Text, x2Text, x3Text);});
+    //    sDiffYr.callback(function(){Constr(sDiffYr,sStartYr,sDiagYr, x2Text, x1Text, x3Text);});
+    //    sDiagYr.callback(function(){Constr(sDiagYr,sStartYr,sDiffYr, x3Text, x1Text, x2Text);});
+
+    sStartYr.callback(function(){Constr(sStartYr,sDiffYr,sDiagYr, x1Text, x2Text, x3Text);});
+    sDiffYr.callback(function(){Constr(sStartYr,sDiffYr,sDiagYr, x1Text, x2Text, x3Text);});
+    sDiagYr.callback(function(){Constr(sStartYr,sDiffYr,sDiagYr, x1Text, x2Text, x3Text);});
+    //-----------------------------slider------------------------------
+
+    function FnDataReloaded(error, villages){
+        if(error) { console.log(error); }
+        // 重新設定里的資料
+        gv_villages = villages;
+        strTitle = "三軍總醫院 " + String(intDiagYr) + " 年來 " + String(intStartYr)  + " 歲到 " + String(intEndYr) + " 歲求診族群分佈圖";
+        title.text(strTitle);
+        arrayDensity = Object.keys(gv_villages.tasks).map(function(k) { return Number(gv_villages.tasks[k][0]/gv_villages.tasks[k][1]);});
+        // 重新設定色彩空間的最大值
+        max = d3.max(d3.values(arrayDensity));
+
+        // 把密度投射到色彩空間
+        color.domain([0, max*0.2])
+            .range(["#d3ffd1","#576a57"])
+            .clamp(true);
+
+        // 資料貼合
+        fxDataBinding();
+        // 上色
+        mapLayer.selectAll('path')
+            .style('fill', fillFn);
+    }
+
+    // 滑鼠放開以後，啟動ended()，當資料讀取完畢以後，call FnDataReloaded
+    function ended(){
+        dataURL = 'http://10.160.16.16:9999/GISSYS/api/geopopdata/' + String(intStartYr) + '/' + String(intDiffYr) + '/' + String(intDiagYr);
+        var q_reload = d3.queue();
+        q_reload.defer(d3.json, dataURL);
+        q_reload.await(FnDataReloaded);
+    }
 </script>
 </body>
 </html>

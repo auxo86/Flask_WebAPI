@@ -8,24 +8,6 @@ path {
     fill: #0d92d5;
 }*/
 
-.sliderBox{
-    position: absolute;
-    top: 150pt;
-    left: 820pt;
-    height: 200pt;
-    width: 500pt;
-    /*background-color: #f00;*/
-}
-
-.sliderSVG{
-    position: absolute;
-    top: 150pt;
-    left: 820pt;
-    height: 200pt;
-    width: 500pt;
-}
-
-
 .headlineBox{
     position: absolute;
     top: 150pt;
@@ -77,7 +59,47 @@ text.detail-text{
     left: 250pt;
 }
 
-.axis { font: 10px sans-serif; -webkit-user-select: none; -moz-user-select: none; user-select: none; }
-.axis   .domain { fill: none; stroke: #000; stroke-opacity: .3; stroke-width: 10px; stroke-linecap: round; }
-.axis   .halo   { fill: none; stroke: #ddd; stroke-width: 8px;  stroke-linecap: round; }
-.slider .handle { fill: #fff; stroke: #000; stroke-opacity: .5; stroke-width: 1.25px; pointer-events: none; }
+/*-------------------------------slider區-----------------------------*/
+.sliderBox{
+    position: absolute;
+    top: 150pt;
+    left: 870pt;
+    height: 200pt;
+    width: 500pt;
+    /*background-color: #f00;*/
+}
+
+.ticks {
+    font: 10px sans-serif;
+}
+
+.track,
+.track-inset,
+.track-overlay {
+    stroke-linecap: round;
+}
+
+.track {
+    stroke: #000;
+    stroke-opacity: 0.3;
+    stroke-width: 10px;
+}
+
+.track-inset {
+    stroke: #ddd;
+    stroke-width: 8px;
+}
+
+.track-overlay {
+    pointer-events: stroke;
+    stroke-width: 50px;
+    stroke: transparent;
+    cursor: crosshair;
+}
+
+.handle {
+    fill: #fff;
+    stroke: #000;
+    stroke-opacity: 0.5;
+    stroke-width: 1.25px;
+}
