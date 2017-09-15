@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>GISinfo</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel=stylesheet type="text/css" href="{{ url_for("static", filename="css/external-stylesheet.css") }}">
     <script src="{{ url_for("static", filename="js/d3.js") }}"></script>
     <script src="{{ url_for("static", filename="js/topojson.js") }}"></script>
@@ -15,9 +16,9 @@
     <div class="subHeadline" id="text_SubHeadLine">-以台北地區為例</div>
 </div>
 <div id="div-SliderBox" class="sliderBox">
-    <div id="div-sStartYr">起始歲數</div><br>
-    <div id="div-sDiffYr">年齡區間</div><br>
-    <div id="div-sDiagYr">統計區間</div><br>
+    <div class="slider-inner-box" id="innerBoxStartYr">起始歲數<div class="slider" id="div-sStartYr"></div></div><br>
+    <div class="slider-inner-box" id="innerBoxDiffYr">年齡區間<div class="slider" id="div-sDiffYr"></div></div><br>
+    <div class="slider-inner-box" id="innerBoxDiagYr">統計區間<div class="slider" id="div-sDiagYr"></div></div><br>
 </div>
 
 <script>
@@ -273,21 +274,33 @@
     }
 
     //-----------------------------slider------------------------------
-    function Constr(d0, d1, d2, txt1, txt2, txt3)
+    function Constr(d0, d1, d2, textTipStartYr, textTipDiffYr, textTipDiagYr)
     {
         intStartYr = Math.round(d0.value());
         intDiffYr = Math.round(d1.value());
         intDiagYr = Math.round(d2.value());
-        // 詭異~明明我全域變數都已經定義過了，為什麼這裡沒有加下面這一行intEndYr就是不會變？
-        // 意外發現python也一樣@@
         intEndYr = intStartYr + intDiffYr;
 
-        txt1.html(intStartYr + ' 歲');
-        txt2.html(intDiffYr + ' 歲');
-        txt3.html(intDiagYr + ' 年內');
+        textTipStartYr.html(intStartYr + ' 歲');
+        textTipDiffYr.html(intDiffYr + ' 年');
+        textTipDiagYr.html(intDiagYr + ' 年內');
     }
 
     var sStartYr = slider(0,120), sDiffYr = slider(0,120), sDiagYr = slider(0,100);
+
+    txtSartYr = d3.select('#innerBoxStartYr')
+        .append('text')
+        .classed('textTip',true)
+        .html(intStartYr + ' 歲');
+
+    txtDiffYr = d3.select('#innerBoxDiffYr')
+        .append('text')
+        .classed('textTip',true)
+        .html(intDiffYr + ' 年');
+    txtDiagYr = d3.select('#innerBoxDiagYr')
+        .append('text')
+        .classed('textTip',true)
+        .html(intDiagYr + ' 年內');
 
     d3.select("#div-sStartYr").append("svg").call(sStartYr);
     d3.select("#div-sDiffYr").append("svg").call(sDiffYr);
@@ -297,17 +310,15 @@
     sDiffYr.value(intDiffYr);
     sDiagYr.value(intDiagYr);
 
-    var x1Text = d3.select('#div-sStartYr').append('text'),
-        x2Text = d3.select('#div-sDiffYr').append('text'),
-        x3Text = d3.select('#div-sDiagYr').append('text');
+
 
     //    sStartYr.callback(function(){Constr(sStartYr,sDiffYr,sDiagYr, x1Text, x2Text, x3Text);});
     //    sDiffYr.callback(function(){Constr(sDiffYr,sStartYr,sDiagYr, x2Text, x1Text, x3Text);});
     //    sDiagYr.callback(function(){Constr(sDiagYr,sStartYr,sDiffYr, x3Text, x1Text, x2Text);});
 
-    sStartYr.callback(function(){Constr(sStartYr,sDiffYr,sDiagYr, x1Text, x2Text, x3Text);});
-    sDiffYr.callback(function(){Constr(sStartYr,sDiffYr,sDiagYr, x1Text, x2Text, x3Text);});
-    sDiagYr.callback(function(){Constr(sStartYr,sDiffYr,sDiagYr, x1Text, x2Text, x3Text);});
+    sStartYr.callback(function(){Constr(sStartYr,sDiffYr,sDiagYr,txtSartYr,txtDiffYr,txtDiagYr);});
+    sDiffYr.callback(function(){Constr(sStartYr,sDiffYr,sDiagYr,txtSartYr,txtDiffYr,txtDiagYr);});
+    sDiagYr.callback(function(){Constr(sStartYr,sDiffYr,sDiagYr,txtSartYr,txtDiffYr,txtDiagYr);});
     //-----------------------------slider------------------------------
 
     function FnDataReloaded(error, villages){

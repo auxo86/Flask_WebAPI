@@ -1,6 +1,6 @@
 function slider(_min, _max)
 {
-    var margin = {top: 10, left: 15, right: 10, bottom: 5},
+    var margin = {top: 10, left: 5, right: 10, bottom: 5},
         width  = 400 - margin.left - margin.right,
         height = 30  - margin.top  - margin.bottom,
 
@@ -15,7 +15,7 @@ function slider(_min, _max)
 
     var x = d3.scaleLinear()
         .domain([_min, _max])
-        .range([0, width-80])
+        .range([0, width-15])
         .clamp(true);
 
     // el就是從外面傳進來的svg

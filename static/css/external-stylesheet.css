@@ -64,9 +64,26 @@ text.detail-text{
     position: absolute;
     top: 150pt;
     left: 870pt;
-    height: 200pt;
-    width: 500pt;
+    height: 130pt;
+    width: 400pt;
     /*background-color: #f00;*/
+}
+
+.slider-inner-box{
+    position: relative;
+    top: 0pt;
+}
+
+text.textTip{
+    color: #f65;
+    position: absolute;
+    left: 70pt;
+    top: 0pt;
+}
+
+.slider{
+    position: relative;
+    top: 5pt;
 }
 
 .ticks {
