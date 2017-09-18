@@ -5,6 +5,8 @@ function slider(_min, _max)
         height = 30  - margin.top  - margin.bottom,
 
         handle,
+        // 因為有handle的面積，所以往右移一下
+        handleAreaShiftCx = 10,
         slider,
         value  = 0,
         // 更新handle值時要call的函數
@@ -29,8 +31,8 @@ function slider(_min, _max)
 
         slider.append("line")
             .attr("class", "track")
-            .attr("x1", x.range()[0])
-            .attr("x2", x.range()[1])
+            .attr("x1", x.range()[0]+handleAreaShiftCx)
+            .attr("x2", x.range()[1]+handleAreaShiftCx)
             .select(function() { return this.parentNode.appendChild(this.cloneNode(true)); })
             .attr("class", "track-inset")
             .select(function() { return this.parentNode.appendChild(this.cloneNode(true)); })
@@ -43,7 +45,7 @@ function slider(_min, _max)
 
         slider.insert("g", ".track-overlay")
             .attr("class", "ticks")
-            .attr("transform", "translate(0," + 18 + ")")
+            .attr("transform", "translate("+ handleAreaShiftCx +"," + 18 + ")")
             .selectAll("text")
             .data(x.ticks(10))
             .enter().append("text")
@@ -70,7 +72,7 @@ function slider(_min, _max)
             // console.log("handle cx: ",x(v),", round value:",x(Math.round(v)));
             value = v;
             // 設定handle的cx值，也就是實際座標值
-            handle.attr("cx", x(v));
+            handle.attr("cx", x(v)+handleAreaShiftCx);
         }
 
 
