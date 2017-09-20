@@ -70,7 +70,7 @@ def get_tasks(numStartYr, numDiffYr, numDiagYr):
                       	      , VILLAGE_ID as n_village_id
                       	      , pop as n_pop
                       	    from
-                      	      N_DIAGDATE_GEODATA
+                      	      N_DIAGDATE_GEODATA_TPE_NTPE
                       	    where
                       	      (julianday('now') - julianday(BIRTHDATE))/365 > {numStartYr}
                       	      and (julianday('now') - julianday(BIRTHDATE))/365 <= {numStartYr + numDiffYr}

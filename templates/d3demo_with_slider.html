@@ -12,7 +12,7 @@
 <body>
 <div class="headlineBox">
     <div class="headline" id="text_HeadLine"></div>
-    <div class="subHeadline" id="text_SubHeadLine">-以台北地區為例</div>
+    <div class="subHeadline" id="text_SubHeadLine">-以雙北地區為例</div>
 </div>
 <div id="div-SliderBox" class="sliderBox">
     <div class="slider-inner-box" id="innerBoxStartYr">起始歲數<div class="slider" id="div-sStartYr"></div></div><br>
@@ -35,7 +35,7 @@
     var arrayDensity;
     var max;
     var features;
-    var gv_villages, gv_hospitals, gv_TaipeiTopo;
+    var gv_villages, gv_hospitals, gv_CityTopo;
 
     var title = d3.select("#text_HeadLine").append("text");
     title.text(strTitle)
@@ -81,8 +81,8 @@
     // 改變投影，把台北的中間變成地圖的中間
     projection
         .translate([width/2, Height/2])
-        .center([121.563,25.086])
-        .scale(195000);
+        .center([121.643,25.026])
+        .scale(60000);
 
     var path = d3.geoPath().projection( // 路徑產生器
         projection
@@ -95,16 +95,16 @@
 
     q.defer(d3.json, dataURL);
     q.defer(d3.csv, "../static/csv/hospitals.csv");
-    q.defer(d3.json, "../static/json/taipei_topo.json");
+    q.defer(d3.json, "../static/json/NTPEandTPETopo.json");
     q.await(fxDataDone);
 
 
     // 為了把非同步資料變成global value，所以只好用下面這個片段
-    function fxDataDone(error, villages, hospitals, TaipeiTopo){
+    function fxDataDone(error, villages, hospitals, CityTopo){
         if(error) { console.log(error); }
         gv_villages = villages;
         gv_hospitals = hospitals;
-        gv_TaipeiTopo = TaipeiTopo;
+        gv_CityTopo = CityTopo;
         loaded();
     }
 
@@ -113,12 +113,12 @@
         max = d3.max(d3.values(arrayDensity));
 
         // 把密度投射到色彩空間
-        color.domain([0, max*0.2])
+        color.domain([0, max])
             .range(["#d3ffd1","#576a57"])
             .clamp(true);
 
-        // 這裡要注意的是 topodata.objects["taipei"] 中的 "taipei" 為原本 shp 的檔名
-        features = topojson.feature(gv_TaipeiTopo, gv_TaipeiTopo.objects["taipei"]).features;
+        // 這裡要注意的是 topodata.objects["NTPEandTPE"] 中的 "NTPEandTPE" 為原本 shp 的檔名
+        features = topojson.feature(gv_CityTopo, gv_CityTopo.objects["NTPEandTPE"]).features;
 
         // 資料貼合
         fxDataBinding();
@@ -152,15 +152,15 @@
 
     function fxDataBinding(){
         for(var i=features.length - 1; i >= 0; i-- ) {
-            if (gv_villages.tasks[features[i].properties.LIE_CODE] === undefined){
+            if (gv_villages.tasks[features[i].properties.VILLCODE] === undefined){
                 features[i].properties.density = undefined;
                 features[i].properties.diagPop = '無資料';
                 features[i].properties.allPop = '無資料';
                 continue;
             }
-            features[i].properties.density = gv_villages.tasks[features[i].properties.LIE_CODE][0]/gv_villages.tasks[features[i].properties.LIE_CODE][1];
-            features[i].properties.diagPop = gv_villages.tasks[features[i].properties.LIE_CODE][0];
-            features[i].properties.allPop = gv_villages.tasks[features[i].properties.LIE_CODE][1];
+            features[i].properties.density = gv_villages.tasks[features[i].properties.VILLCODE][0]/gv_villages.tasks[features[i].properties.VILLCODE][1];
+            features[i].properties.diagPop = gv_villages.tasks[features[i].properties.VILLCODE][0];
+            features[i].properties.allPop = gv_villages.tasks[features[i].properties.VILLCODE][1];
         }
     }
 
@@ -176,10 +176,11 @@
     }
 
     function nameFn(d){
+        var strfullGeoName = d.properties.COUNTYNAME + d.properties.TOWNNAME + d.properties.VILLNAME;
         if (d.properties.density === undefined){
-            return d.properties.FULL + ': <br>沒有資料';
+            return strfullGeoName + ': <br>沒有資料';
         }
-        return d && d.properties ? d.properties.FULL + '<br><br>飽和指數: <br>' + (d.properties.density*100).toFixed(6) +
+        return d && d.properties ? strfullGeoName + '<br><br>飽和指數: <br>' + (d.properties.density*100).toFixed(6) +
             ' %<br>看診人數: ' + d.properties.diagPop + '<br>地區總人口: ' + d.properties.allPop : null;
     }
 
