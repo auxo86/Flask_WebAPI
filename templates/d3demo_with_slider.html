@@ -209,9 +209,10 @@
         // 但是離開其他里時，因為焦點沒有消失，所以訊息文字會設定為焦點里的資料
         // 如果沒有設定焦點，那麼mouseout時就會把里資料清空
         if (centered.node()){
-            DetailText.text(nameFn(centered));
+            // centered.node()的type是path, centered.node().__data__的type則是feature
+            DetailText.html(nameFn(centered.node().__data__));
         } else {
-            DetailText.text("");
+            DetailText.html("");
         }
     }
 

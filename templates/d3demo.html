@@ -210,9 +210,10 @@
         // 但是離開其他里時，因為焦點沒有消失，所以訊息文字會設定為焦點里的資料
         // 如果沒有設定焦點，那麼mouseout時就會把里資料清空
         if (centered.node()){
-            DetailText.text(nameFn(centered));
+            // centered.node()的type是path, centered.node().__data__的type則是feature
+            DetailText.html(nameFn(centered.node().__data__));
         } else {
-            DetailText.text("");
+            DetailText.html("");
         }
     }
 
@@ -237,9 +238,13 @@
         }
 
         var bounds = path.bounds(d),
+            // 算X邊長度
             dx = bounds[1][0] - bounds[0][0],
+            // 算Y邊長度
             dy = bounds[1][1] - bounds[0][1],
+            // 算圖片中心的X位置
             x = (bounds[0][0] + bounds[1][0]) / 2,
+            // 算圖片中心的Y位置
             y = (bounds[0][1] + bounds[1][1]) / 2,
             scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / width, dy / Height))),
             translate = [width / 2 - scale * x, Height / 2 - scale * y];
