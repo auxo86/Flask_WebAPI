@@ -237,10 +237,21 @@
         }
 
         var bounds = path.bounds(d),
+            // 算X邊長度
             dx = bounds[1][0] - bounds[0][0],
+            // 算Y邊長度
             dy = bounds[1][1] - bounds[0][1],
+            // 算圖片中心的X位置
             x = (bounds[0][0] + bounds[1][0]) / 2,
+            // 算圖片中心的Y位置
             y = (bounds[0][1] + bounds[1][1]) / 2,
+            // 先根據dx決定到底要放大為width的幾倍
+            // 如果dx小於width，例如只有0.1倍，那麼0.9/0.1就是9
+            // 但是放大九倍就太多了，所以在八倍和九倍之間選擇八倍，也就是說任何一個區塊最多就是放大八倍
+            // 又例如說，dx如果是width的0.2倍，那麼用1/0.2就會變成倒數，也就是原來dx只有width的1/5，倒數放大到五倍，就跟width一樣大
+            // 但是為了美觀，所以用0.9，這樣會比倒數小一點
+            // 但是如果dx是width的兩倍大，這樣並不會縮小dx，而是就顯示一倍
+            // 最外圈的功能是如果比較小會放大，但是比較大不會縮小
             scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / width, dy / Height))),
             translate = [width / 2 - scale * x, Height / 2 - scale * y];
 

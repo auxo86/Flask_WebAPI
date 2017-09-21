@@ -42,8 +42,15 @@ def fnTupleToDict(tupleData):
     return _dictData
 
 
-def fnCloseResource(fileErrLog, cur, conn):
-    fileErrLog.close()
+# def fnCloseResource(fileErrLog, cur, conn):
+#     fileErrLog.close()
+#     del cur
+#     conn.commit()
+#     conn.close()
+#     del conn
+
+
+def fnCloseResource(cur, conn):
     del cur
     conn.commit()
     conn.close()
@@ -81,12 +88,12 @@ def get_tasks(numStartYr, numDiffYr, numDiagYr):
                       order by
                         population desc'''
 
-    if not os.path.exists(FileOutputDir):
-        os.makedirs(FileOutputDir)
-    # 開啟要寫入的json
-    fileOutputJson = open(FileOutputDir + strOutputJSONName, 'w', encoding='utf-8')
-    # 開啟要寫入的errlog
-    fileErrLog = open(FileOutputDir + fileErrLogName, "w", encoding="utf-8")
+    # if not os.path.exists(FileOutputDir):
+    #     os.makedirs(FileOutputDir)
+    # # 開啟要寫入的json
+    # fileOutputJson = open(FileOutputDir + strOutputJSONName, 'w', encoding='utf-8')
+    # # 開啟要寫入的errlog
+    # fileErrLog = open(FileOutputDir + fileErrLogName, "w", encoding="utf-8")
 
     # 連接sqlite3資料庫
     conn = fnGetDBConn(str_connect)
@@ -97,9 +104,10 @@ def get_tasks(numStartYr, numDiffYr, numDiagYr):
     # 轉換tuple成為dict
     dictData = fnTupleToDict(tupleData)
     # 輸出檔案成json
-    json.dump(dictData, fileOutputJson)
+    # json.dump(dictData, fileOutputJson)
     # 關閉資源
-    fnCloseResource(fileErrLog, cur, conn)
+    # fnCloseResource(fileErrLog, cur, conn)
+    fnCloseResource(cur, conn)
 
     return jsonify({'tasks': dictData})
 
