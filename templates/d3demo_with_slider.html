@@ -253,6 +253,9 @@
             // 但是如果dx是width的兩倍大，這樣並不會縮小dx，而是就顯示一倍
             // 最外圈的功能是如果比較小會放大，但是比較大不會縮小
             scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / width, dy / Height))),
+            // 在放大以後，該圖塊的中心點會移動
+            // [width/2, Height/2]是SVG的中心，用-號就可以取出跟中心的距離絕對值
+            // 於是就可以做到translate
             translate = [width / 2 - scale * x, Height / 2 - scale * y];
 
         svg.transition()
