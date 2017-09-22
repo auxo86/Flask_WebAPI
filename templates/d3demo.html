@@ -9,6 +9,7 @@
     <script src="{{ url_for("static", filename="js/topojson.js") }}"></script>
     <script src="{{ url_for("static", filename="js/d3-queue.js") }}"></script>
     <script src="{{ url_for("static", filename="js/d3jsV4Slider.js") }}"></script>
+    <script src="{{ url_for("static", filename="js/arr-stat.js") }}"></script>
 </head>
 <body>
 <div class="headlineBox">
@@ -79,11 +80,9 @@
     // 產生投影
     var projection = d3.geoMercator();
 
-    // 改變投影，把台北的中間變成地圖的中間
-    projection
-        .translate([width/2, Height/2])
-        .center([121.643,25.026])
-        .scale(60000);
+
+    //    projection
+    //        .scale(60000);
 
     var path = d3.geoPath().projection( // 路徑產生器
         projection
@@ -123,6 +122,15 @@
 
         // 資料貼合
         fxDataBinding();
+
+        // 取得地圖中心和放大倍數
+        var geoCenterAndScale = fnGetGeoCentroidAndScale();
+
+        // 改變投影，把台北的中間變成地圖的中間
+        projection
+            .translate([width/2, Height/2])
+            .center(geoCenterAndScale.Center)
+            .scale(geoCenterAndScale.scale);
 
         // 畫地圖
         mapLayer.selectAll("path").data(features)
@@ -164,6 +172,58 @@
             features[i].properties.allPop = gv_villages.tasks[features[i].properties.VILLCODE][1];
         }
     }
+
+    // 計算地圖中心和放大倍數
+    function fnGetGeoCentroidAndScale(){
+        var GeoCentroidandScale = {Center:[], scale:0},
+            GeoX = [], GeoY = [],
+            nGeoX = [], nGeoY = [],
+            MaxX, MinX,
+            MaxY, MinY,
+            meanX, meanY,
+            sigmaX, sigmaY;
+
+        features.forEach(function(feature) {
+            feature.geometry.coordinates[0].forEach(function(GeoXY){
+                GeoX.push(parseFloat(GeoXY[0]));
+                GeoY.push(parseFloat(GeoXY[1]));
+            });
+        });
+
+        // 計算全部X座標平均值
+        meanX = arr.mean(GeoX);
+        // 計算全部Y座標平均值
+        meanY = arr.mean(GeoY);
+        // 計算X標準差
+        sigmaX = arr.standardDeviation(GeoX);
+        // 計算Y標準差
+        sigmaY = arr.standardDeviation(GeoY);
+
+        // 去掉標準差超過 3.5 sigma的X元素
+        GeoX.forEach(function (X) {
+            if (X <= (meanX + sigmaX*3.5) && X >= (meanX - sigmaX*3.5)) {
+                nGeoX.push(X);
+            }
+        });
+
+        // 去掉標準差超過 3.5 sigma的Y元素
+        GeoY.forEach(function (Y) {
+            if (Y <= (meanY + sigmaY*3.5) && Y >= (meanY - sigmaY*3.5)) {
+                nGeoY.push(Y);
+            }
+        });
+
+        MaxX = Math.max.apply(null,nGeoX);
+        MinX = Math.min.apply(null,nGeoX);
+        MaxY = Math.max.apply(null,nGeoY);
+        MinY = Math.min.apply(null,nGeoY);
+
+        GeoCentroidandScale.Center = [(MaxX + MinX) / 2, (MaxY + MinY)/2];
+        GeoCentroidandScale.scale = Math.min(0.9/gv_CityTopo.transform.scale[0], 0.9/gv_CityTopo.transform.scale[1]);
+
+        return GeoCentroidandScale;
+    }
+
 
     function fillFn(d){
         if (d.properties.density === undefined){
@@ -246,7 +306,17 @@
             x = (bounds[0][0] + bounds[1][0]) / 2,
             // 算圖片中心的Y位置
             y = (bounds[0][1] + bounds[1][1]) / 2,
+            // 先根據dx決定到底要放大為width的幾倍
+            // 如果dx小於width，例如只有0.1倍，那麼0.9/0.1就是9
+            // 但是放大九倍就太多了，所以在八倍和九倍之間選擇八倍，也就是說任何一個區塊最多就是放大八倍
+            // 又例如說，dx如果是width的0.2倍，那麼用1/0.2就會變成倒數，也就是原來dx只有width的1/5，倒數放大到五倍，就跟width一樣大
+            // 但是為了美觀，所以用0.9，這樣會比倒數小一點
+            // 但是如果dx是width的兩倍大，這樣並不會縮小dx，而是就顯示一倍
+            // 最外圈的功能是如果比較小會放大，但是比較大不會縮小
             scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / width, dy / Height))),
+            // 在放大以後，該圖塊的中心點會移動
+            // [width/2, Height/2]是SVG的中心，用-號就可以取出跟中心的距離絕對值
+            // 於是就可以做到translate
             translate = [width / 2 - scale * x, Height / 2 - scale * y];
 
         svg.transition()

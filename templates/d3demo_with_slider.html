@@ -8,6 +8,7 @@
     <script src="../static/js/topojson.js"></script>
     <script src="../static/js/d3-queue.js"></script>
     <script src="../static/js/d3jsV4Slider.js"></script>
+    <script src="../static/js/arr-stat.js"></script>
 </head>
 <body>
 <div class="headlineBox">
@@ -78,11 +79,9 @@
     // 產生投影
     var projection = d3.geoMercator();
 
-    // 改變投影，把台北的中間變成地圖的中間
-    projection
-        .translate([width/2, Height/2])
-        .center([121.643,25.026])
-        .scale(60000);
+
+//    projection
+//        .scale(60000);
 
     var path = d3.geoPath().projection( // 路徑產生器
         projection
@@ -122,6 +121,15 @@
 
         // 資料貼合
         fxDataBinding();
+
+        // 取得地圖中心和放大倍數
+        var geoCenterAndScale = fnGetGeoCentroidAndScale();
+
+        // 改變投影，把台北的中間變成地圖的中間
+        projection
+            .translate([width/2, Height/2])
+            .center(geoCenterAndScale.Center)
+            .scale(geoCenterAndScale.scale);
 
         // 畫地圖
         mapLayer.selectAll("path").data(features)
@@ -163,6 +171,58 @@
             features[i].properties.allPop = gv_villages.tasks[features[i].properties.VILLCODE][1];
         }
     }
+
+    // 計算地圖中心和放大倍數
+    function fnGetGeoCentroidAndScale(){
+        var GeoCentroidandScale = {Center:[], scale:0},
+            GeoX = [], GeoY = [],
+            nGeoX = [], nGeoY = [],
+            MaxX, MinX,
+            MaxY, MinY,
+            meanX, meanY,
+            sigmaX, sigmaY;
+
+        features.forEach(function(feature) {
+            feature.geometry.coordinates[0].forEach(function(GeoXY){
+                GeoX.push(parseFloat(GeoXY[0]));
+                GeoY.push(parseFloat(GeoXY[1]));
+            });
+        });
+
+        // 計算全部X座標平均值
+        meanX = arr.mean(GeoX);
+        // 計算全部Y座標平均值
+        meanY = arr.mean(GeoY);
+        // 計算X標準差
+        sigmaX = arr.standardDeviation(GeoX);
+        // 計算Y標準差
+        sigmaY = arr.standardDeviation(GeoY);
+
+        // 去掉標準差超過 3.5 sigma的X元素
+        GeoX.forEach(function (X) {
+            if (X <= (meanX + sigmaX*3.5) && X >= (meanX - sigmaX*3.5)) {
+                nGeoX.push(X);
+            }
+        });
+
+        // 去掉標準差超過 3.5 sigma的Y元素
+        GeoY.forEach(function (Y) {
+            if (Y <= (meanY + sigmaY*3.5) && Y >= (meanY - sigmaY*3.5)) {
+                nGeoY.push(Y);
+            }
+        });
+
+        MaxX = Math.max.apply(null,nGeoX);
+        MinX = Math.min.apply(null,nGeoX);
+        MaxY = Math.max.apply(null,nGeoY);
+        MinY = Math.min.apply(null,nGeoY);
+
+        GeoCentroidandScale.Center = [(MaxX + MinX) / 2, (MaxY + MinY)/2];
+        GeoCentroidandScale.scale = Math.min(0.9/gv_CityTopo.transform.scale[0], 0.9/gv_CityTopo.transform.scale[1]);
+
+        return GeoCentroidandScale;
+    }
+
 
     function fillFn(d){
         if (d.properties.density === undefined){
