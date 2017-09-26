@@ -1,10 +1,16 @@
 var arr = {
     max: function(array) {
-        return Math.max.apply(null, array);
+        // return Math.max.apply(null, array);
+        return array.reduce(function (p, v) {
+            return ( p > v ? p : v );
+        });
     },
 
     min: function(array) {
-        return Math.min.apply(null, array);
+        // return Math.min.apply(null, array);
+        return array.reduce(function (p, v) {
+            return ( p < v ? p : v );
+        });
     },
 
     range: function(array) {
