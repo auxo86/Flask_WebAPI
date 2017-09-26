@@ -74,8 +74,6 @@ function slider(_min, _max)
             // 設定handle的cx值，也就是實際座標值
             handle.attr("cx", x(v) + handleAreaShiftCx);
         }
-
-
     }
 
     chart.margin = function (_) {
