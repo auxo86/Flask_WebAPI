@@ -6,7 +6,7 @@ function slider(_min, _max)
 
         handle,
         // 因為有handle的面積，所以往右移一下
-        handleAreaShiftCx = 10,
+        handleAreaShiftCx = 8,
         slider,
         value  = 0,
         // 更新handle值時要call的函數
@@ -39,7 +39,7 @@ function slider(_min, _max)
             .attr("class", "track-overlay")
             .call(d3.drag()
                 .on("start.interrupt", function() { slider.interrupt(); })
-                .on("start drag", function() { setHandle(x.invert(d3.event.x)); })
+                .on("start drag", function() { setHandle(x.invert(d3.event.x - handleAreaShiftCx)); })
                 .on('end', function() { ended(); })
             );
 
@@ -55,7 +55,7 @@ function slider(_min, _max)
 
         handle = slider.insert("circle", ".track-overlay")
             .attr("class", "handle")
-            .attr("r", 8)
+            .attr("r", handleAreaShiftCx)
             .attr('style', "stroke: #099; stroke-width: 2");
 
         function setHandle(h) {
@@ -72,7 +72,7 @@ function slider(_min, _max)
             // console.log("handle cx: ",x(v),", round value:",x(Math.round(v)));
             value = v;
             // 設定handle的cx值，也就是實際座標值
-            handle.attr("cx", x(v)+handleAreaShiftCx);
+            handle.attr("cx", x(v) + handleAreaShiftCx);
         }
 
 
